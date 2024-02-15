@@ -24,15 +24,29 @@ Button buttons[1024];
     @returns Nothing
 */
 // TODO: Add button text
-void DrawButton(Rectangle bounds, float radius, float borderWidth, ColorSwitch borderColors, ColorSwitch backgroundColors)
+void DrawButton(Rectangle bounds, float radius, float borderWidth, Color borderColor, Color backgroundColor)
 {
     Rectangle backgroundRect = { bounds.x, bounds.y, bounds.width, bounds.height };
-    Color defaultBackgroundColor = backgroundColors.colorOne;
+    Color defaultBackgroundColor = backgroundColor;
     DrawRectangleRounded(backgroundRect, radius, 10.0f, defaultBackgroundColor);
 
     Rectangle borderRect = { bounds.x + (borderWidth/2), bounds.y + (borderWidth/2), bounds.width - borderWidth, bounds.height - borderWidth };
-    Color defaultBorderColor = borderColors.colorOne;
+    Color defaultBorderColor = borderColor;
     DrawRectangleRounded(borderRect, radius, 10.0f, defaultBorderColor);
+}
+
+// TODO: Documentation
+Color ClickColor(Color input)
+{
+    Color output;
+
+    output.r = input.r;
+    output.g = input.g;
+    output.b = input.b;
+    
+    output.a = input.a / 2;
+
+    return output;
 }
 
 /**
@@ -45,10 +59,7 @@ void DrawButtons(char *page)
     {
         Button button = buttons[i];
 
-        if(button.isDrawn)
-            continue;
-
-        if(button.isUpdated)
+        if(!button.isUpdated)
             continue;
 
         if(strcmp(page, button.page))
@@ -56,10 +67,60 @@ void DrawButtons(char *page)
 
         Rectangle buttonBounds = { button.x, button.y, button.width, button.height };
 
-        DrawButton(buttonBounds, button.radius, button.borderWidth, button.borderColors, button.backgroundColors);
+        Color borderColor = button.borderColors.colorOne;
+        Color backgroundColor = button.backgroundColors.colorOne;
 
-        button.isDrawn = 1;
+        switch(button.state)
+        {
+            case 1:
+                borderColor = button.borderColors.colorTwo;
+                backgroundColor = button.backgroundColors.colorTwo;
+                break;
+
+            case 2:
+                borderColor = ClickColor(button.borderColors.colorOne);
+                backgroundColor = ClickColor(button.backgroundColors.colorOne);
+                break;
+
+            default:
+                borderColor = button.borderColors.colorOne;
+                backgroundColor = button.backgroundColors.colorOne;
+                break;
+        }
+
+        DrawButton(buttonBounds, button.radius, button.borderWidth, borderColor, backgroundColor);
+
         button.isUpdated = 0;
+    }
+}
+
+// TODO: Documentation
+void CheckButtonCollisions(Vector2 mousePosition)
+{
+    for(int i = 0; i < numButtons; i++)
+    {
+        int previousState = buttons[i].state;
+
+        Rectangle bounds = { buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height };
+        if(CheckCollisionPointRec(mousePosition, bounds))
+        {
+            if(IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            {
+                buttons[i].state = 2;
+                buttons[i].onClick();
+            }
+            else
+            {
+                buttons[i].state = 1;
+            }
+        }
+        else
+        {
+            buttons[i].state = 0;
+        }
+
+        if(buttons[i].state != previousState)
+            buttons[i].isUpdated = 1;
     }
 }
 
@@ -141,18 +202,25 @@ Color RGBAToColor(char *rgba)
                 case 2:
                     newColor.b = value;
                     break;
-
-                // a
-                case 3:
-                    newColor.a = value;
-                    break;
             }
 
             currentEntry++;
         }
     }
 
+    currentValue[valueIndex] = 0;
+    valueIndex = 0;
+
+    // TODO: Error checking
+    newColor.a = atoi(currentValue);
+
     return newColor;
+}
+
+// TODO: Remove me, this is temporary
+void onClick()
+{
+    printf("I was clicked\n");
 }
 
 // TODO: Documentation
@@ -160,9 +228,12 @@ Color RGBAToColor(char *rgba)
 // TODO: Maybe add smart default values for attributes that are formed based on what looks right
 void AddButton(DynamicArray *attributes, char *page)
 {
+    void (*onClickRef)() = &onClick;
+
     Button newButton;
-    newButton.isDrawn = 0;
-    newButton.isUpdated = 0;
+    newButton.isUpdated = 1;
+    newButton.state = 0;
+    newButton.onClick = onClickRef;
     newButton.x = 0;
     newButton.y = 0;
     newButton.width = 100;

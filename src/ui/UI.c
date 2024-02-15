@@ -9,5 +9,6 @@ void DrawUI(char *page)
 {
     mousePosition = GetMousePosition();
 
+    CheckButtonCollisions(mousePosition);
     DrawButtons(page);
 }

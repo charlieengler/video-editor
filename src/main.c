@@ -6,7 +6,7 @@ int main(void)
 {
     GenerateLayouts();
 
-    InitWindow(800, 450, "Video Editor");
+    InitWindow(1920, 1080, "Video Editor");
 
     while(!WindowShouldClose())
     {

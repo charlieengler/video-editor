@@ -1,4 +1,5 @@
 struct DynamicArray;
+struct Vector2;
 
 #ifndef RAYLIB_H
     #define RAYLIB_H
@@ -18,8 +19,9 @@ typedef struct ColorSwitch
 
 typedef struct Button
 {
-    int isDrawn;
     int isUpdated;
+    int state;
+    void (*onClick)();
     float x, y, width, height;
     float radius;
     float borderWidth;
@@ -36,3 +38,4 @@ void GenerateLayouts();
 
 // ./src/Buttons.c
 void DrawButtons(char *page);
+void CheckButtonCollisions(struct Vector2 mousePosition);
