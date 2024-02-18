@@ -12,29 +12,6 @@
 int numButtons = 0;
 Button buttons[1024];
 
-/**
-    Draws buttons with borders and rounded edges to the screen.
-    Each button has a default color set and selected color set for both the border and background.
-
-    @param bounds: The x [float], y [float], width [float], and height [float] attributes of the button
-    @param radius: The border radius [float, 0-1] (rounding of the corners) as a percentage
-    @param borderWidth: The width of the border [float] in pixels
-    @param borderColors: Two colors [ColorSwitch] that define the default and selected colors of the border
-    @param backgroundColors: Two colors [ColorSwitch] that define the default and selected colors of the background
-    @returns Nothing
-*/
-// TODO: Add button text
-void DrawButton(Rectangle bounds, float radius, float borderWidth, Color borderColor, Color backgroundColor)
-{
-    Rectangle backgroundRect = { bounds.x, bounds.y, bounds.width, bounds.height };
-    Color defaultBackgroundColor = backgroundColor;
-    DrawRectangleRounded(backgroundRect, radius, 10.0f, defaultBackgroundColor);
-
-    Rectangle borderRect = { bounds.x + (borderWidth/2), bounds.y + (borderWidth/2), bounds.width - borderWidth, bounds.height - borderWidth };
-    Color defaultBorderColor = borderColor;
-    DrawRectangleRounded(borderRect, radius, 10.0f, defaultBorderColor);
-}
-
 // TODO: Documentation
 Color ClickColor(Color input)
 {
@@ -50,48 +27,56 @@ Color ClickColor(Color input)
 }
 
 /**
+    Draws buttons with borders and rounded edges to the screen.
+    Each button has a default color set and selected color set for both the border and background.
+
+    @param index: The index [int] of the button
+    @returns Nothing
+*/
+// TODO: Add button text
+void DrawButton(int index)
+{
+    Button button = buttons[index];
+
+    Color borderColor = button.borderColors.colorOne;
+    Color backgroundColor = button.backgroundColors.colorOne;
+
+    switch(button.state)
+    {
+        case 1:
+            borderColor = button.borderColors.colorTwo;
+            backgroundColor = button.backgroundColors.colorTwo;
+            break;
+
+        case 2:
+            borderColor = ClickColor(button.borderColors.colorOne);
+            backgroundColor = ClickColor(button.backgroundColors.colorOne);
+            break;
+
+        default:
+            borderColor = button.borderColors.colorOne;
+            backgroundColor = button.backgroundColors.colorOne;
+            break;
+    }
+
+    Rectangle backgroundRect = { button.x, button.y, button.width, button.height };
+    Color defaultBackgroundColor = backgroundColor;
+    DrawRectangleRounded(backgroundRect, button.radius, 10.0f, defaultBackgroundColor);
+
+    Rectangle borderRect = { button.x + (button.borderWidth/2), button.y + (button.borderWidth/2), button.width - button.borderWidth, button.height - button.borderWidth };
+    Color defaultBorderColor = borderColor;
+    DrawRectangleRounded(borderRect, button.radius, 10.0f, defaultBorderColor);
+}
+
+/**
     Draws all buttons to the screen.
     @returns Nothing
 */
 void DrawButtons(char *page)
 {
     for(int i = 0; i < numButtons; i++)
-    {
-        Button button = buttons[i];
-
-        if(!button.isUpdated)
-            continue;
-
-        if(strcmp(page, button.page))
-            continue;
-
-        Rectangle buttonBounds = { button.x, button.y, button.width, button.height };
-
-        Color borderColor = button.borderColors.colorOne;
-        Color backgroundColor = button.backgroundColors.colorOne;
-
-        switch(button.state)
-        {
-            case 1:
-                borderColor = button.borderColors.colorTwo;
-                backgroundColor = button.backgroundColors.colorTwo;
-                break;
-
-            case 2:
-                borderColor = ClickColor(button.borderColors.colorOne);
-                backgroundColor = ClickColor(button.backgroundColors.colorOne);
-                break;
-
-            default:
-                borderColor = button.borderColors.colorOne;
-                backgroundColor = button.backgroundColors.colorOne;
-                break;
-        }
-
-        DrawButton(buttonBounds, button.radius, button.borderWidth, borderColor, backgroundColor);
-
-        button.isUpdated = 0;
-    }
+        if(!strcmp(page, buttons[i].page))
+            DrawButton(i);
 }
 
 // TODO: Documentation
@@ -99,8 +84,6 @@ void CheckButtonCollisions(Vector2 mousePosition)
 {
     for(int i = 0; i < numButtons; i++)
     {
-        int previousState = buttons[i].state;
-
         Rectangle bounds = { buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height };
         if(CheckCollisionPointRec(mousePosition, bounds))
         {
@@ -118,9 +101,6 @@ void CheckButtonCollisions(Vector2 mousePosition)
         {
             buttons[i].state = 0;
         }
-
-        if(buttons[i].state != previousState)
-            buttons[i].isUpdated = 1;
     }
 }
 
@@ -231,7 +211,6 @@ void AddButton(DynamicArray *attributes, char *page)
     void (*onClickRef)() = &onClick;
 
     Button newButton;
-    newButton.isUpdated = 1;
     newButton.state = 0;
     newButton.onClick = onClickRef;
     newButton.x = 0;

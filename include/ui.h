@@ -19,7 +19,6 @@ typedef struct ColorSwitch
 
 typedef struct Button
 {
-    int isUpdated;
     int state;
     void (*onClick)();
     float x, y, width, height;
