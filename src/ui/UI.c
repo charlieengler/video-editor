@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "../../include/raylib.h"
 #include "../../include/ui.h"
@@ -56,6 +57,28 @@ void ParseAttribute(char *attribute)
     units[unitsIndex] = 0;
 
     strcpy(attribute, value);
+}
+
+// TODO: Documentation
+// TODO: Show in the documentation that the attribute pointer provided should be the length of the attribute
+//       plus 52 chars for the value
+void CreateFloatAttribute(char *attribute, float value)
+{
+    int attributeLen = strlen(attribute);
+    attribute[attributeLen] = '=';
+    attributeLen++;
+
+    char valueString[50];
+    int valueStringIndex = 0;
+    sprintf(valueString, "%f", value);
+    int i;
+    for(i = attributeLen; i < attributeLen + strlen(valueString); i++)
+    {
+        attribute[i] = valueString[valueStringIndex];
+        valueStringIndex++;
+    }
+
+    attribute[i] = 0;
 }
 
 // TODO: Documentation

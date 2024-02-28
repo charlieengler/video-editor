@@ -333,6 +333,8 @@ void GenerateLayouts()
 
         for(int j = 0; j < openingTags->length; j++)
         {
+            // TODO: Break these into separate functions
+
             if(!strcmp((char*)openingTags->items[j], "button"))
             {
                 char key[18] = "button";

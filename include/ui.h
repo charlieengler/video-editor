@@ -19,6 +19,16 @@ typedef struct ColorSwitch
     struct Color colorTwo;
 } ColorSwitch;
 
+// ./src/UI.c
+void DrawUI(char *page);
+void ParseAttribute(char *attribute);
+void CreateFloatAttribute(char *attribute, float value);
+Color RGBAToColor(char *rgba);
+
+// ./src/Layouts.c
+void GenerateLayouts();
+
+// ./src/Buttons.c
 typedef struct Button
 {
     int state;
@@ -32,6 +42,10 @@ typedef struct Button
     char *text;
 } Button;
 
+void DrawAllButtons(char *page);
+void CheckButtonCollisions(struct Vector2 mousePosition);
+
+// ./src/Text.c
 typedef struct Text
 {
     float x, y, size;
@@ -40,17 +54,4 @@ typedef struct Text
     char *text;
 } Text;
 
-// ./src/UI.c
-void DrawUI(char *page);
-void ParseAttribute(char *attribute);
-Color RGBAToColor(char *rgba);
-
-// ./src/Layouts.c
-void GenerateLayouts();
-
-// ./src/Buttons.c
-void DrawAllButtons(char *page);
-void CheckButtonCollisions(struct Vector2 mousePosition);
-
-// ./src/Text.c
 void DrawAllText(char *page);

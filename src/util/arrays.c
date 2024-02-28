@@ -4,9 +4,12 @@
 
 #include "../../include/utils/arrays.h"
 
+// TODO: Global arrays variable for cleanup after the program executes
+
 /**
     Creates a dynamic array on the heap.
     @param da: A pointer [DynamicArray*] to a blank dynamic array
+    @param dataType: A string representation of the data type being stored
     @returns Nothing
 */
 void ArrayCreate(DynamicArray *da, char *dataType)

@@ -5,6 +5,7 @@
 #include "../../include/raylib.h"
 #include "../../include/ui.h"
 #include "../../include/ui/buttons.h"
+#include "../../include/ui/text.h"
 
 #include "../../include/utils/arrays.h"
 
@@ -174,6 +175,18 @@ void AddButton(DynamicArray *attributes, char *text, char *page)
             newButton.borderColors.colorTwo = RGBAToColor(attribute);
     }
 
+    Text newText;
+    // TODO: Set x and y for placement (maybe add centered, left-aligned, right-aligned, etc. options)
+    newText.x = newButton.x;
+    newText.y = newButton.y;
+    // TODO: Calculate size programmatically based on the size of the button and the number of text chars
+    newText.size = 15;
+    // TODO: Calculate color programmatically based on the color of the button (might need to add hover color as well)
+    newText.color = BLACK;
+    newText.page = page;
+    newText.text = text;
+    
+    AddTextStruct(newText);
 
     buttons[numButtons] = newButton;
     numButtons = numButtons < MAXBUTTONS ? numButtons + 1 : 0;

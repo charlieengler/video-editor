@@ -69,3 +69,9 @@ void AddTextElem(char *text, DynamicArray *attributes, char *page)
     textElems[numTextElems] = newText;
     numTextElems = numTextElems < MAXTEXTELEMS ? numTextElems + 1 : 0;
 }
+
+void AddTextStruct(Text newText)
+{
+    textElems[numTextElems] = newText;
+    numTextElems = numTextElems < MAXTEXTELEMS ? numTextElems + 1 : 0;
+}
