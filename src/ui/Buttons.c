@@ -9,8 +9,9 @@
 #include "../../include/utils/arrays.h"
 
 // TODO: Notify the user that the max number of buttons per layout is 1024
+#define MAXBUTTONS 1024
 int numButtons = 0;
-Button buttons[1024];
+Button buttons[MAXBUTTONS];
 
 // TODO: Documentation
 Color ClickColor(Color input)
@@ -72,7 +73,7 @@ void DrawButton(int index)
     Draws all buttons to the screen.
     @returns Nothing
 */
-void DrawButtons(char *page)
+void DrawAllButtons(char *page)
 {
     for(int i = 0; i < numButtons; i++)
         if(!strcmp(page, buttons[i].page))
@@ -104,99 +105,6 @@ void CheckButtonCollisions(Vector2 mousePosition)
     }
 }
 
-// TODO: Documentation
-void ParseAttribute(char *attribute)
-{
-    // TODO: Handle different units (i.e. pixels, percentages, etc.)
-    // TODO: Use units to influence the final value inside this function
-    char value[1024], units[1024];
-
-    int readingValue = 0;
-    int valueIndex = 0;
-    int unitsIndex = 0;
-    for(unsigned long i = 0; i < strlen(attribute); i++)
-    {
-        if(attribute[i] == '"' && readingValue)
-            readingValue = 0;
-
-        if(readingValue)
-        {
-            if((attribute[i] >= 48 && attribute[i] <= 57) || attribute[i] == ',' || attribute[i] == '.')
-            {
-                value[valueIndex] = attribute[i];
-                valueIndex++;
-            }
-            else
-            {
-                units[unitsIndex] = attribute[i];
-                unitsIndex++;
-            }
-        }
-
-        if(attribute[i] == '"' && !readingValue)
-            readingValue = 1;
-    }
-
-    value[valueIndex] = 0;
-    units[unitsIndex] = 0;
-
-    strcpy(attribute, value);
-}
-
-// TODO: Documentation
-Color RGBAToColor(char *rgba)
-{
-    // TODO: Error handling if the rgba value is improperly formatted
-    Color newColor;
-    int currentEntry = 0;
-    int valueIndex = 0;
-    char currentValue[1024];
-    for(unsigned long i = 0; i < strlen(rgba); i++)
-    {
-        if(rgba[i] != ',')
-        {
-            currentValue[valueIndex] = rgba[i];
-            valueIndex++;
-        }
-        else
-        {
-            currentValue[valueIndex] = 0;
-            valueIndex = 0;
-
-            // TODO: Error checking
-            int value = atoi(currentValue);
-
-            switch(currentEntry)
-            {
-                // r
-                case 0:
-                    newColor.r = value;
-                    break;
-                
-                // g
-                case 1:
-                    newColor.g = value;
-                    break;
-                
-                // b
-                case 2:
-                    newColor.b = value;
-                    break;
-            }
-
-            currentEntry++;
-        }
-    }
-
-    currentValue[valueIndex] = 0;
-    valueIndex = 0;
-
-    // TODO: Error checking
-    newColor.a = atoi(currentValue);
-
-    return newColor;
-}
-
 // TODO: Remove me, this is temporary
 void onClick()
 {
@@ -206,8 +114,9 @@ void onClick()
 // TODO: Documentation
 // TODO: Default placement, scaling, etc. when attributes aren't specified
 // TODO: Maybe add smart default values for attributes that are formed based on what looks right
-void AddButton(DynamicArray *attributes, char *page)
+void AddButton(DynamicArray *attributes, char *text, char *page)
 {
+    // TODO: Make onClick so it isn't hard coded
     void (*onClickRef)() = &onClick;
 
     Button newButton;
@@ -224,46 +133,48 @@ void AddButton(DynamicArray *attributes, char *page)
     newButton.borderColors.colorOne = RED;
     newButton.borderColors.colorTwo = RED;
     newButton.page = page;
+    newButton.text = text;
 
     for(int i = 0; i < attributes->length; i++)
     {
         char *item = attributes->items[i];
-        char value[1024];
-        strcpy(value, item);
+        char attribute[ATTRIBLEN];
+        strcpy(attribute, item);
 
-        ParseAttribute(value);
+        ParseAttribute(attribute);
 
         if(item[0] == 'x')
-            newButton.x = atof(value);
+            newButton.x = atof(attribute);
 
         if(item[0] == 'y')
-            newButton.y = atof(value);
+            newButton.y = atof(attribute);
 
-        if(strstr(item, "width"))
-            newButton.width = atof(value);
+        if(strstr(item, "width") != NULL)
+            newButton.width = atof(attribute);
 
         if(strstr(item, "height") != NULL)
-            newButton.height = atof(value);
+            newButton.height = atof(attribute);
 
         if(strstr(item, "radius") != NULL)
-            newButton.radius = atof(value) / 100.0f;
+            newButton.radius = atof(attribute) / 100.0f;
 
         if(strstr(item, "borderWidth") != NULL)
-            newButton.borderWidth = atof(value);
+            newButton.borderWidth = atof(attribute);
 
         if(strstr(item, "bgColorOne") != NULL)
-            newButton.backgroundColors.colorOne = RGBAToColor(value);
+            newButton.backgroundColors.colorOne = RGBAToColor(attribute);
 
         if(strstr(item, "bgColorTwo") != NULL)
-            newButton.backgroundColors.colorTwo = RGBAToColor(value);
+            newButton.backgroundColors.colorTwo = RGBAToColor(attribute);
 
         if(strstr(item, "borderColorOne") != NULL)
-            newButton.borderColors.colorOne = RGBAToColor(value);
+            newButton.borderColors.colorOne = RGBAToColor(attribute);
 
         if(strstr(item, "borderColorsTwo") != NULL)
-            newButton.borderColors.colorTwo = RGBAToColor(value);
+            newButton.borderColors.colorTwo = RGBAToColor(attribute);
     }
 
+
     buttons[numButtons] = newButton;
-    numButtons = numButtons < 1023 ? numButtons + 1 : 0;
+    numButtons = numButtons < MAXBUTTONS ? numButtons + 1 : 0;
 }

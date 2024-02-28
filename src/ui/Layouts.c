@@ -4,6 +4,7 @@
 #include <string.h>
 #include <dirent.h>
 
+#include "../../include/ui/text.h"
 #include "../../include/ui/buttons.h"
 #include "../../include/utils/arrays.h"
 
@@ -50,15 +51,57 @@ char* ReadLayoutFile(char* filename)
 }
 
 // TODO: Documentation
-void GenerateKey(char *key, char *base, int index, char *test)
+void GenerateKey(char *key, char *base, int index)
 {
     char indexString[12];
     strcpy(key, base);
     sprintf(indexString, "%d", index);
     strcat(key, indexString);
-    strcat(key, test);
 
     key[strlen(base) + strlen(indexString)] = 0;
+}
+
+// TODO: Documentation
+void AddOpeningTag(DynamicArray *openingTags, char *currentTag, int currentTagIndex, int *commonIndex)
+{
+    char *allocatedTag = malloc(strlen(currentTag));
+    strcpy(allocatedTag, currentTag);
+
+    ArrayAppend(openingTags, "", allocatedTag, currentTagIndex+1);
+    (*commonIndex)++;
+}
+
+// TODO: Documentation
+void AddAttribute(DynamicArray *attributes, char *currentAttribute, char *currentTag, int currentAttributeIndex, int commonIndex)
+{
+    char *allocatedAttribute = malloc(strlen(currentAttribute));
+    strcpy(allocatedAttribute, currentAttribute);
+
+    char key[140];
+    GenerateKey(key, currentTag, commonIndex); 
+
+    ArrayAppend(attributes, key, allocatedAttribute, currentAttributeIndex+1);
+}
+
+// TODO: Documentation
+void AddText(DynamicArray *text, char *currentTag, char *currentText, int currentTextIndex, int commonIndex)
+{
+    char *allocatedText = malloc(strlen(currentText));
+    strcpy(allocatedText, currentText);
+
+    char key[140];
+    GenerateKey(key, currentTag, commonIndex-1);
+
+    ArrayAppend(text, key, allocatedText, currentTextIndex+1);
+}
+
+// TODO: Documentation
+void AddClosingTag(DynamicArray *closingTags, char *currentTag, int currentTagIndex)
+{
+    char *allocatedTag = malloc(strlen(currentTag));
+    strcpy(allocatedTag, currentTag);
+
+    ArrayAppend(closingTags, "", allocatedTag, currentTagIndex+1);
 }
 
 // TODO: Documentation
@@ -77,6 +120,7 @@ DynamicArray *FormLayout(char* rawLayout)
     DynamicArray *closingTags = malloc(sizeof(DynamicArray));
     ArrayCreate(closingTags, "char*");
 
+    int commonIndex = 0;
     int readingTag = 0;
     int readingAttribute = 0;
     int readingText = 0;
@@ -112,14 +156,8 @@ DynamicArray *FormLayout(char* rawLayout)
                             if(currentText[j] != 10 && currentText[j] != 13 && currentText[j] != 32)
                                 allNewlines = 0;
 
-                        char *allocatedText = malloc(strlen(currentText));
-                        strcpy(allocatedText, currentText);
-
-                        char key[140];
-                        GenerateKey(key, currentTag, openingTags->length, "<");
-
                         if(!allNewlines)
-                            ArrayAppend(text, key, allocatedText, currentTextIndex+1);
+                            AddText(text, currentTag, currentText, currentTextIndex, commonIndex);
 
                         currentTextIndex = 0;
                     }
@@ -142,22 +180,13 @@ DynamicArray *FormLayout(char* rawLayout)
                     currentTag[currentTagIndex] = 0;
                     currentAttribute[currentAttributeIndex] = 0;
 
-                    char *allocatedTag = malloc(strlen(currentTag));
-                    strcpy(allocatedTag, currentTag);
+                    if(currentAttributeIndex > 0)
+                        AddAttribute(attributes, currentAttribute, currentTag, currentAttributeIndex, commonIndex);
 
                     if(!closingTag)
-                        ArrayAppend(openingTags, "", allocatedTag, currentTagIndex+1);
+                        AddOpeningTag(openingTags, currentTag, currentTagIndex, &commonIndex);
                     else
-                        ArrayAppend(closingTags, "", allocatedTag, currentTagIndex+1);
-
-                    char *allocatedAttribute = malloc(strlen(currentAttribute));
-                    strcpy(allocatedAttribute, currentAttribute);
-
-                    char key[140];
-                    GenerateKey(key, currentTag, openingTags->length - 1, ">");
-
-                    if(currentAttributeIndex > 0)
-                        ArrayAppend(attributes, key, allocatedAttribute, currentAttributeIndex+1);
+                        AddClosingTag(closingTags, currentTag, currentTagIndex);
 
                     readingTag = 0;
                     readingAttribute = 0;
@@ -177,15 +206,8 @@ DynamicArray *FormLayout(char* rawLayout)
                     currentTag[currentTagIndex] = 0;
                     currentAttribute[currentAttributeIndex] = 0;
 
-                    char *allocatedAttribute = malloc(strlen(currentAttribute));
-                    strcpy(allocatedAttribute, currentAttribute);
-
-                    char key[140];
-                    GenerateKey(key, currentTag, openingTags->length, "space");
-
-
                     if(currentAttributeIndex > 0)
-                        ArrayAppend(attributes, key, allocatedAttribute, currentAttributeIndex+1);
+                        AddAttribute(attributes, currentAttribute, currentTag, currentAttributeIndex, commonIndex);
 
                     readingAttribute = 1;
                     currentAttributeIndex = 0;
@@ -308,9 +330,10 @@ void GenerateLayouts()
         DynamicArray *openingTags = layout->items[OPENING_TAGS_INDEX];
         DynamicArray *attributes = layout->items[ATTRIBUTES_INDEX];
         DynamicArray *text = layout->items[TEXT_INDEX];
+
         for(int j = 0; j < openingTags->length; j++)
         {
-            if(strcmp((char*)openingTags->items[j], "button") == 0)
+            if(!strcmp((char*)openingTags->items[j], "button"))
             {
                 char key[18] = "button";
                 char index[12];
@@ -319,9 +342,28 @@ void GenerateLayouts()
                 strcat(key, index);
 
                 DynamicArray *buttonAttributes = ArrayGetItemsByKey(attributes, key);
-                AddButton(buttonAttributes, page);
+                DynamicArray *buttonText = ArrayGetItemsByKey(text, key);
+
+                AddButton(buttonAttributes, buttonText->items[0], page);
 
                 free(buttonAttributes);
+                free(buttonText);
+            }
+
+            if(!strcmp((char*)openingTags->items[j], "text"))
+            {
+                char key[16] = "text";
+                char index[12];
+
+                sprintf(index, "%d", j);
+                strcat(key, index);
+
+                DynamicArray *textElem = ArrayGetItemsByKey(text, key);
+                DynamicArray *textAttributes = ArrayGetItemsByKey(attributes, key);
+
+                AddTextElem(textElem->items[0], textAttributes, page);
+
+                free(textAttributes);
             }
         }
     }

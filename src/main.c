@@ -4,6 +4,8 @@
 
 int main(void)
 {
+    // TODO: There are a ton of memory leaks in this entire program, find them
+
     GenerateLayouts();
 
     InitWindow(1920, 1080, "Video Editor");
